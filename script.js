@@ -11,7 +11,7 @@ var panoramasArray = [], materialsArray = [];
 var panoramaNumber = 0;
 
 for (var i = 12591; i < 12662; i++) {
-	panoramasArray.push('R00' + i + '.jpg')
+	panoramasArray.push('R00' + i + '.JPG')
 }
 
 for (var i = 0; i < 71; i++) {
