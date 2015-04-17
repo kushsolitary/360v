@@ -1,33 +1,25 @@
 var manualControl = false;
-var longitude = 0;
-var latitude = 0;
+var longitude = -96;
+var latitude = -3;
 var savedX;
 var savedY;
 var savedLongitude;
 var savedLatitude;
 
 // panoramas background
-var panoramasArray = [], materialsArray = [];
+var panoramasArray = ['2.jpg', '1.jpg'];
 var panoramaNumber = 0;
-
-for (var i = 12591; i < 12662; i++) {
-	panoramasArray.push('R00' + i + '.JPG')
-}
-
-for (var i = 0; i < 71; i++) {
-	materialsArray[i] = THREE.ImageUtils.loadTexture(panoramasArray[i])
-}
 
 // setting up the renderer
 renderer = new THREE.WebGLRenderer();
-renderer.setSize(640, 400);
+renderer.setSize(640, 360);
 document.body.appendChild(renderer.domElement);
 
 // creating a new scene
 var scene = new THREE.Scene();
 
 // adding a camera
-var camera = new THREE.PerspectiveCamera(75, 640 / 400, 1, 1000);
+var camera = new THREE.PerspectiveCamera(75, 640 / 360, 1, 1000);
 camera.target = new THREE.Vector3(0, 0, 0);
 
 // creation of a big sphere geometry
@@ -59,6 +51,9 @@ function render(){
 	camera.target.x = 500 * Math.sin(THREE.Math.degToRad(90 - latitude)) * Math.cos(THREE.Math.degToRad(longitude));
 	camera.target.y = 500 * Math.cos(THREE.Math.degToRad(90 - latitude));
 	camera.target.z = 500 * Math.sin(THREE.Math.degToRad(90 - latitude)) * Math.sin(THREE.Math.degToRad(longitude));
+	camera.fov = 65;
+	camera.updateProjectionMatrix();
+
 	camera.lookAt(camera.target);
 
 	// calling again render function
@@ -67,18 +62,15 @@ function render(){
 
 // when the mouse is pressed, we switch to manual control and save current coordinates
 function onDocumentMouseDown(event){
-	// Disable movement for slides in between
-	if (panoramaNumber === 0 || panoramaNumber === 70) {
-		event.preventDefault();
+	event.preventDefault();
 
-		manualControl = true;
+	manualControl = true;
 
-		savedX = event.clientX;
-		savedY = event.clientY;
+	savedX = event.clientX;
+	savedY = event.clientY;
 
-		savedLongitude = longitude;
-		savedLatitude = latitude;
-	}
+	savedLongitude = longitude;
+	savedLatitude = latitude;
 }
 
 // when the mouse moves, if in manual contro we adjust coordinates
@@ -87,6 +79,7 @@ function onDocumentMouseMove(event){
 		longitude = (savedX - event.clientX) * 0.1 + savedLongitude;
 		latitude = (event.clientY - savedY) * 0.1 + savedLatitude;
 	}
+	console.log(longitude, latitude);
 }
 
 // when the mouse is released, we turn manual control off
@@ -94,49 +87,49 @@ function onDocumentMouseUp(event){
 	manualControl = false;
 }
 
-// pressing a key changes the texture map
-document.onkeyup = function(event){
-	latitude = 0
-	longitude = 0
-	// setInterval(function() {
-	// 	if (latitude !== 0 || longitude !== 0) {
-
-	// 		if (latitude < 0) {
-	// 			latitude += 0.1;
-	// 		}
-	// 		else {
-	// 			latitude -= 0.1;
-	// 		}
-
-	// 		if (longitude < 0) {
-	// 			longitude += 0.1;
-	// 		}
-	// 		else {
-	// 			longitude -= 0.1;
-	// 		}
-	// 	}
-	// }, 1000/60)
-
+var video = document.querySelector('video');
+document.addEventListener('keyup', function(e) {
+	// Hide the pano and play the video
 	if (panoramaNumber === 0) {
-		// Start transition
-		var interval = setInterval(function () {
-			panoramaNumber = (panoramaNumber + 1) % panoramasArray.length
-			sphereMaterial.map = materialsArray[panoramaNumber]
+		longitude = -197.5;
+		latitude = -0.3;
 
-			// Clear interval when reaches the last checkpoint
-			if (panoramaNumber === 70)
-				clearInterval(interval)
-		}, 1000/60);
-	}
-	else if (panoramaNumber === 70) {
-		// Start transition
-		var interval = setInterval(function () {
-			panoramaNumber = (panoramaNumber - 1) % panoramasArray.length
-			sphereMaterial.map = materialsArray[panoramaNumber]
+		panoramaNumber = 1
+		document.querySelector('canvas').style.display = 'none';
 
-			// Clear interval when reaches the last checkpoint
-			if (panoramaNumber === 0)
-				clearInterval(interval)
-		}, 1000/60);
+		// Change the pano image
+		sphereMaterial.map = THREE.ImageUtils.loadTexture(panoramasArray[panoramaNumber])
+
+		video.style.display = 'block';
+		video.play()
 	}
+	else {
+		longitude = -283.5;
+		latitude = -3.5;
+
+		panoramaNumber = 0
+		document.querySelector('canvas').style.display = 'none';
+
+		// Change the pano image
+		sphereMaterial.map = THREE.ImageUtils.loadTexture(panoramasArray[panoramaNumber])
+
+		video.style.display = 'block';
+		video.play()
+	}
+});
+
+video.onended = function () {
+	// Hide the video and show pano
+	video.style.display = 'none';
+	document.querySelector('canvas').style.display = 'block';
+
+	// Change to next video
+	if (panoramaNumber === 1) {
+		document.querySelector('source').src = '1.mov'
+	}
+	else {
+		document.querySelector('source').src = '2.mov'
+	}
+
+	video.load();
 }
